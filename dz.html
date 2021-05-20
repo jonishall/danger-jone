@@ -10,7 +10,24 @@
       }
     </style>
     <script src="OpenLayers.js"></script>
-    <script>
+   <!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/8.6.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
+<script>
+  // Your web app's Firebase configuration
+  var firebaseConfig = {
+    apiKey: "AIzaSyDZiym17kIipQ1RWHwfc3l4Gd3NRlMlGyw",
+    authDomain: "danger-jone.firebaseapp.com",
+    databaseURL: "https://danger-jone-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "danger-jone",
+    storageBucket: "danger-jone.appspot.com",
+    messagingSenderId: "120231203393",
+    appId: "1:120231203393:web:0a1b089ed77378d1892cc0"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+var database = firebase.database();
+      
       function init() {
 	function getLocation() {
  		 if (navigator.geolocation) {
@@ -21,6 +38,7 @@
         map = new OpenLayers.Map("basicMap");
 	var lon;
 	var lat;
+	var nimi=prompt("Anna nimes","pelaaja1");
 	
 	getLocation();
 	function posPosition(position){
@@ -36,7 +54,7 @@
         map.setCenter(position, zoom );
 	var markers = new OpenLayers.Layer.Markers( "Markers" );
         map.addLayer(markers);
-
+	database.ref(nimi).set(position);
         var size = new OpenLayers.Size(21,25);
 	var size2= new OpenLayers.Size(1920,1080);
         var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
@@ -46,7 +64,15 @@
 	var player=new OpenLayers.Marker(position,icon);
         markers.addMarker(player);
 	markers.addMarker(new OpenLayers.Marker(position,alue));
-	setTimeout(() => {markers.removeMarker(player);},10000);
+	var ref=database.ref();
+	ref.orderByKey().on("child_added", function(snapshot) { markers.addMarker(new OpenLayers.Marker(snapshot.val(),icon));});
+	
+	window.onbeforeunload = closingCode;
+function closingCode(){
+   database.ref(nimi).set(null);
+   return null;
+}
+	setTimeout(() => {},10000);
 }
 }
         
