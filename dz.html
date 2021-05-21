@@ -65,14 +65,28 @@ var database = firebase.database();
         markers.addMarker(player);
 	markers.addMarker(new OpenLayers.Marker(position,alue));
 	var ref=database.ref();
-	ref.orderByKey().on("child_added", function(snapshot) { markers.addMarker(new OpenLayers.Marker(snapshot.val(),icon));});
-	
+	var pelaajat=[];
+	var i=0;
+	ref.orderByKey().on("child_added", function(snapshot) { pelaajat.push(snapshot.val());
+	markers.addMarker(new OpenLayers.Marker(pelaajat[i],new OpenLayers.Icon('./marker.png',size,offset)));i++;
+});
+
 	window.onbeforeunload = closingCode;
 function closingCode(){
    database.ref(nimi).set(null);
    return null;
 }
-	setTimeout(() => {},10000);
+	function update(){
+		markers.destroy();
+		markers=new OpenLayers.Layer.Markers( "Markers" );
+		markers.addMarker(new OpenLayers.Marker(position,alue));
+		ref.orderByKey().on("child_added", function(snapshot) { pelaajat.push(snapshot.val());
+	markers.addMarker(new OpenLayers.Marker(pelaajat[i],new OpenLayers.Icon('./marker.png',size,offset)));i++;});
+	map.addLayer(markers);
+	console.log("moi");
+	setTimeout(() => {update()},1000);
+}
+	setTimeout(() => {update()},1000);
 }
 }
         
