@@ -14,6 +14,8 @@
 <script src="https://www.gstatic.com/firebasejs/8.6.2/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-database.js"></script>
 <script>
+
+
   // Your web app's Firebase configuration
   var firebaseConfig = {
     apiKey: "AIzaSyDZiym17kIipQ1RWHwfc3l4Gd3NRlMlGyw",
@@ -26,80 +28,92 @@
   };
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
-var database = firebase.database();
-      
-      function init() {
-	function getLocation() {
- 		 if (navigator.geolocation) {
-    			navigator.geolocation.getCurrentPosition(posPosition);			
-  		} else {
+  var database = firebase.database();
+
+  function init() {
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(posPosition);
+      } else {
+      }
     }
-}
-        map = new OpenLayers.Map("basicMap");
-	var lon;
-	var lat;
-	var nimi=prompt("Anna nimes","pelaaja1");
-	
-	getLocation();
-	function posPosition(position){
-		lon=position.coords.longitude;
-		lat=position.coords.latitude;
-		
-	var mapnik         = new OpenLayers.Layer.OSM();
-        var fromProjection = new OpenLayers.Projection("EPSG:4326");   // Transform from WGS 1984
-        var toProjection   = new OpenLayers.Projection("EPSG:900913"); // to Spherical Mercator Projection
-        var position       = new OpenLayers.LonLat(lon,lat).transform( fromProjection, toProjection);
-        var zoom           = 15; 
-        map.addLayer(mapnik);
-        map.setCenter(position, zoom );
-	var markers = new OpenLayers.Layer.Markers( "Markers" );
+
+    map = new OpenLayers.Map("basicMap");
+    var lon;
+    var lat;
+    var nimi = prompt("Anna nimes","pelaaja1");
+
+    getLocation();
+
+    function posPosition(position) {
+      lon=position.coords.longitude;
+      lat=position.coords.latitude;
+
+      var mapnik         = new OpenLayers.Layer.OSM();
+      var fromProjection = new OpenLayers.Projection("EPSG:4326");   // Transform from WGS 1984
+      var toProjection   = new OpenLayers.Projection("EPSG:900913"); // to Spherical Mercator Projection
+      var position       = new OpenLayers.LonLat(lon,lat).transform( fromProjection, toProjection);
+      var zoom           = 15;
+      map.addLayer(mapnik);
+      map.setCenter(position, zoom );
+
+      var markers = new OpenLayers.Layer.Markers( "Markers" );
+      map.addLayer(markers);
+
+      database.ref(nimi).set(position);
+
+      var size = new OpenLayers.Size(21,25);
+      var size2= new OpenLayers.Size(1920,1080);
+      var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
+      var offset2= new OpenLayers.Pixel(-(size2.w/2), -size2.h/2);
+      var alue =new OpenLayers.Icon('./alue.png',size2,offset2);
+      var icon = new OpenLayers.Icon('./marker.png',size,offset);
+      var player=new OpenLayers.Marker(position,icon);
+      markers.addMarker(player);
+      markers.addMarker(new OpenLayers.Marker(position,alue));
+
+      var ref=database.ref();
+      var pelaajat=[];
+      var i=0;
+      ref.orderByKey().on("child_added", function(snapshot) {
+        pelaajat.push(snapshot.val());
+        markers.addMarker(new OpenLayers.Marker(pelaajat[i],new OpenLayers.Icon('./marker.png',size,offset)));
+        i++;
+      });
+
+      window.onbeforeunload = closingCode;
+
+      function closingCode(){
+         database.ref(nimi).set(null);
+         return null;
+      }
+
+      function update(){
+        markers.destroy();
+        database.ref(nimi).set(position);
+        markers=new OpenLayers.Layer.Markers( "Markers" );
+        markers.addMarker(new OpenLayers.Marker(position,alue));
+
+        ref.orderByKey().on("child_added", function(snapshot) {
+          pelaajat.push(snapshot.val());
+          markers.addMarker(new OpenLayers.Marker(pelaajat[i],new OpenLayers.Icon('./marker.png',size,offset)));
+          i++;
+        });
         map.addLayer(markers);
-	database.ref(nimi).set(position);
-        var size = new OpenLayers.Size(21,25);
-	var size2= new OpenLayers.Size(1920,1080);
-        var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
-	var offset2= new OpenLayers.Pixel(-(size2.w/2), -size2.h/2);
-	var alue =new OpenLayers.Icon('./alue.png',size2,offset2);
-        var icon = new OpenLayers.Icon('./marker.png',size,offset);
-	var player=new OpenLayers.Marker(position,icon);
-        markers.addMarker(player);
-	markers.addMarker(new OpenLayers.Marker(position,alue));
-	var ref=database.ref();
-	var pelaajat=[];
-	var i=0;
-	ref.orderByKey().on("child_added", function(snapshot) { pelaajat.push(snapshot.val());
-	markers.addMarker(new OpenLayers.Marker(pelaajat[i],new OpenLayers.Icon('./marker.png',size,offset)));i++;
-});
 
-	window.onbeforeunload = closingCode;
-function closingCode(){
-   database.ref(nimi).set(null);
-   return null;
-}
-	function update(){
-		markers.destroy();
-		database.ref(nimi).set(position);
-		markers=new OpenLayers.Layer.Markers( "Markers" );
-		markers.addMarker(new OpenLayers.Marker(position,alue));
-		ref.orderByKey().on("child_added", function(snapshot) { pelaajat.push(snapshot.val());
-	markers.addMarker(new OpenLayers.Marker(pelaajat[i],new OpenLayers.Icon('./marker.png',size,offset)));i++;});
-	map.addLayer(markers);
-
-	setTimeout(() => {update()},1000);
-}
-	setTimeout(() => {update()},1000);
-}
-}
-        
-      
-    </script>
-<audio id="alarm"><source src="sound.mp3" type="audio/mp3"> </audio>			
+        setTimeout(() => {update()},1000);
+      }
+      setTimeout(() => {update()},1000);
+    }
+  }
+  </script>
+  <audio id="alarm"><source src="sound.mp3" type="audio/mp3"> </audio>
 
   </head>
 
   <body onload="init();">
     <div id="basicMap"></div>
-    <button onclick="document.getElementById('alarm').play();">Play Audio</button>		
+    <button onclick="document.getElementById('alarm').play();">Play Audio</button>
     <button onclick="document.getElementById('alarm').pause();">Stop Audio</button>
   </body>
 </html>
