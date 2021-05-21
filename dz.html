@@ -78,12 +78,13 @@ function closingCode(){
 }
 	function update(){
 		markers.destroy();
+		database.ref(nimi).set(position);
 		markers=new OpenLayers.Layer.Markers( "Markers" );
 		markers.addMarker(new OpenLayers.Marker(position,alue));
 		ref.orderByKey().on("child_added", function(snapshot) { pelaajat.push(snapshot.val());
 	markers.addMarker(new OpenLayers.Marker(pelaajat[i],new OpenLayers.Icon('./marker.png',size,offset)));i++;});
 	map.addLayer(markers);
-	console.log("moi");
+
 	setTimeout(() => {update()},1000);
 }
 	setTimeout(() => {update()},1000);
