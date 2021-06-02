@@ -36,6 +36,8 @@ var database = firebase.database();
     }
 }
         map = new OpenLayers.Map("basicMap");
+	
+	
 	var lon;
 	var lat;
 	var nimi=prompt("Anna nimes","pelaaja1");
@@ -53,7 +55,7 @@ var database = firebase.database();
 	var ref=database.ref();
 	var zoom           = 15; 
 	var centhost;
-	database.ref("host").on('value',(snap) => {centhost=[snap.val().lon,snap.val().lat];map.setCenter([snap.val().lon,snap.val().lat],zoom)});
+	database.ref("host").on('value',(snap) => {map.setCenter([snap.val().lon,snap.val().lat],zoom);centhost=map.getCenter();});
 
         map.addLayer(mapnik);
 	var markers = new OpenLayers.Layer.Markers( "Markers" );
@@ -85,15 +87,17 @@ function closingCode(){
         markers.destroy();
         database.ref(nimi).set(position);
         markers=new OpenLayers.Layer.Markers( "Markers" );
-	markers.addMarker(new OpenLayers.Marker(map.getCenter(),alue));
+	markers.addMarker(new OpenLayers.Marker(centhost,alue));
 	alue.size.h=0.99*alue.size.h;
 	alue.size.w=0.99*alue.size.w;
 	alue.offset.x=-(size2.w/2);
 	alue.offset.y=-size2.h/2;
+	map.setCenter(centhost,zoom);
         ref.orderByKey().on("child_added", function(snapshot) {
           pelaajat.push(snapshot.val());
           markers.addMarker(new OpenLayers.Marker(pelaajat[i],new OpenLayers.Icon('./marker.png',size,offset)));
           i++;
+	console.log(map.getCenter());
         });
         map.addLayer(markers);
 
